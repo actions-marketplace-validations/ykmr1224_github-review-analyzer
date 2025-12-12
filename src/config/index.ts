@@ -29,11 +29,22 @@ export interface RepositoryConfig {
 }
 
 /**
- * Authentication configuration - simplified to token only for MVP
+ * Authentication configuration - supports both PAT and GitHub App
  */
 export interface AuthConfig {
-  /** GitHub Personal Access Token */
-  token: string;
+  /** Authentication type */
+  type: 'token' | 'app';
+  /** GitHub Personal Access Token (for type: 'token') */
+  token?: string;
+  /** GitHub App configuration (for type: 'app') */
+  app?: {
+    /** GitHub App ID */
+    appId: string;
+    /** GitHub App private key (PEM format) */
+    privateKey: string;
+    /** Installation ID for the repository */
+    installationId: string;
+  };
 }
 
 /**
@@ -104,9 +115,7 @@ export class ConfigurationManager implements IConfigurationProvider {
         owner: process.env.GITHUB_REPOSITORY_OWNER || '',
         repo: process.env.GITHUB_REPOSITORY_NAME || '',
       },
-      auth: {
-        token: process.env.GITHUB_TOKEN || '',
-      },
+      auth: this.buildAuthConfig(),
       analysis: {
         reviewerUserName: process.env.REVIEWER_USERNAME || DEFAULT_CONFIG.analysis?.reviewerUserName || 'coderabbitai',
         timePeriod: {
@@ -131,6 +140,29 @@ export class ConfigurationManager implements IConfigurationProvider {
   }
 
   /**
+   * Build authentication configuration based on environment variables
+   */
+  private buildAuthConfig(): AuthConfig {
+    const authType = (process.env.GITHUB_AUTH_TYPE as 'token' | 'app') || 'token';
+    
+    if (authType === 'app' && process.env.GITHUB_APP_ID) {
+      return {
+        type: 'app',
+        app: {
+          appId: process.env.GITHUB_APP_ID,
+          privateKey: process.env.GITHUB_APP_PRIVATE_KEY || '',
+          installationId: process.env.GITHUB_APP_INSTALLATION_ID || '',
+        }
+      };
+    } else {
+      return {
+        type: 'token',
+        token: process.env.GITHUB_TOKEN || '',
+      };
+    }
+  }
+
+  /**
    * Simple validation
    */
   validateConfig(config: AppConfig): ValidationError[] {
@@ -142,8 +174,27 @@ export class ConfigurationManager implements IConfigurationProvider {
     if (!config.repository.repo) {
       errors.push({ field: 'repository.repo', message: 'Repository name is required' });
     }
-    if (!config.auth.token) {
-      errors.push({ field: 'auth.token', message: 'GitHub token is required' });
+    // Validate authentication configuration
+    if (config.auth.type === 'token') {
+      if (!config.auth.token) {
+        errors.push({ field: 'auth.token', message: 'GitHub token is required when using token authentication' });
+      }
+    } else if (config.auth.type === 'app') {
+      if (!config.auth.app) {
+        errors.push({ field: 'auth.app', message: 'GitHub App configuration is required when using app authentication' });
+      } else {
+        if (!config.auth.app.appId) {
+          errors.push({ field: 'auth.app.appId', message: 'GitHub App ID is required' });
+        }
+        if (!config.auth.app.privateKey) {
+          errors.push({ field: 'auth.app.privateKey', message: 'GitHub App private key is required' });
+        }
+        if (!config.auth.app.installationId) {
+          errors.push({ field: 'auth.app.installationId', message: 'GitHub App installation ID is required' });
+        }
+      }
+    } else {
+      errors.push({ field: 'auth.type', message: 'Authentication type must be either "token" or "app"' });
     }
     if (!config.analysis.reviewerUserName) {
       errors.push({ field: 'analysis.reviewerUserName', message: 'Reviewer username is required' });
