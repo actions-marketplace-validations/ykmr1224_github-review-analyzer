@@ -1,0 +1,256 @@
+{
+  "metadata": {
+    "repository": "example/repo",
+    "reviewer": "coderabbitai[bot]",
+    "period": {
+      "start": "2024-01-01T00:00:00.000Z",
+      "end": "2024-01-07T23:59:59.999Z"
+    },
+    "collectedAt": "2024-01-08T10:00:00.000Z",
+    "totalPRs": 2,
+    "totalComments": 8
+  },
+  "pullRequests": [
+    {
+      "id": 1,
+      "number": 123,
+      "title": "Add user authentication feature",
+      "state": "open",
+      "createdAt": "2024-01-01T08:00:00.000Z",
+      "updatedAt": "2024-01-01T12:30:00.000Z",
+      "author": {
+        "login": "developer1",
+        "type": "User",
+        "id": 67890
+      },
+      "comments": []
+    },
+    {
+      "id": 2,
+      "number": 124,
+      "title": "Fix performance issue in data processing",
+      "state": "merged",
+      "createdAt": "2024-01-01T08:30:00.000Z",
+      "updatedAt": "2024-01-01T13:00:00.000Z",
+      "mergedAt": "2024-01-01T13:00:00.000Z",
+      "author": {
+        "login": "developer2",
+        "type": "User",
+        "id": 54321
+      },
+      "comments": []
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "body": "Consider adding error handling for this function. This could throw an exception if the input is null.",
+      "author": {
+        "login": "coderabbitai[bot]",
+        "type": "Bot",
+        "id": 12345
+      },
+      "createdAt": "2024-01-01T09:00:00.000Z",
+      "updatedAt": "2024-01-01T09:00:00.000Z",
+      "isResolved": true,
+      "reactions": [
+        {
+          "type": "thumbs_up",
+          "user": {
+            "login": "developer1",
+            "type": "User",
+            "id": 67890
+          },
+          "createdAt": "2024-01-01T10:00:00.000Z"
+        },
+        {
+          "type": "heart",
+          "user": {
+            "login": "developer2",
+            "type": "User",
+            "id": 54321
+          },
+          "createdAt": "2024-01-01T10:01:00.000Z"
+        }
+      ],
+      "replies": []
+    },
+    {
+      "id": 101,
+      "body": "Good catch! Fixed in the latest commit.",
+      "author": {
+        "login": "developer1",
+        "type": "User",
+        "id": 67890
+      },
+      "createdAt": "2024-01-01T10:00:00.000Z",
+      "updatedAt": "2024-01-01T10:00:00.000Z",
+      "isResolved": false,
+      "reactions": [],
+      "replies": [],
+      "inReplyToId": 1
+    },
+    {
+      "id": 2,
+      "body": "This variable name could be more descriptive. Consider renaming `x` to `userCount`.",
+      "author": {
+        "login": "coderabbitai[bot]",
+        "type": "Bot",
+        "id": 12345
+      },
+      "createdAt": "2024-01-01T09:15:00.000Z",
+      "updatedAt": "2024-01-01T09:15:00.000Z",
+      "isResolved": false,
+      "reactions": [
+        {
+          "type": "thumbs_up",
+          "user": {
+            "login": "developer1",
+            "type": "User",
+            "id": 67890
+          },
+          "createdAt": "2024-01-01T10:02:00.000Z"
+        },
+        {
+          "type": "thumbs_up",
+          "user": {
+            "login": "developer2",
+            "type": "User",
+            "id": 54321
+          },
+          "createdAt": "2024-01-01T10:03:00.000Z"
+        },
+        {
+          "type": "rocket",
+          "user": {
+            "login": "developer1",
+            "type": "User",
+            "id": 67890
+          },
+          "createdAt": "2024-01-01T10:04:00.000Z"
+        }
+      ],
+      "replies": []
+    },
+    {
+      "id": 3,
+      "body": "Great implementation! This follows the established patterns well.",
+      "author": {
+        "login": "coderabbitai[bot]",
+        "type": "Bot",
+        "id": 12345
+      },
+      "createdAt": "2024-01-01T09:30:00.000Z",
+      "updatedAt": "2024-01-01T09:30:00.000Z",
+      "isResolved": false,
+      "reactions": [
+        {
+          "type": "heart",
+          "user": {
+            "login": "developer2",
+            "type": "User",
+            "id": 54321
+          },
+          "createdAt": "2024-01-01T11:00:00.000Z"
+        },
+        {
+          "type": "hooray",
+          "user": {
+            "login": "developer1",
+            "type": "User",
+            "id": 67890
+          },
+          "createdAt": "2024-01-01T11:01:00.000Z"
+        }
+      ],
+      "replies": []
+    },
+    {
+      "id": 102,
+      "body": "Thanks for the positive feedback!",
+      "author": {
+        "login": "developer2",
+        "type": "User",
+        "id": 54321
+      },
+      "createdAt": "2024-01-01T11:00:00.000Z",
+      "updatedAt": "2024-01-01T11:00:00.000Z",
+      "isResolved": false,
+      "reactions": [],
+      "replies": [],
+      "inReplyToId": 3
+    },
+    {
+      "id": 4,
+      "body": "This approach might have performance implications with large datasets. Consider using a more efficient algorithm.",
+      "author": {
+        "login": "coderabbitai[bot]",
+        "type": "Bot",
+        "id": 12345
+      },
+      "createdAt": "2024-01-01T09:45:00.000Z",
+      "updatedAt": "2024-01-01T09:45:00.000Z",
+      "isResolved": true,
+      "reactions": [
+        {
+          "type": "thumbs_down",
+          "user": {
+            "login": "developer1",
+            "type": "User",
+            "id": 67890
+          },
+          "createdAt": "2024-01-01T12:00:00.000Z"
+        },
+        {
+          "type": "confused",
+          "user": {
+            "login": "developer2",
+            "type": "User",
+            "id": 54321
+          },
+          "createdAt": "2024-01-01T12:01:00.000Z"
+        }
+      ],
+      "replies": []
+    },
+    {
+      "id": 103,
+      "body": "I disagree. This is the standard approach and performance is acceptable for our use case.",
+      "author": {
+        "login": "developer1",
+        "type": "User",
+        "id": 67890
+      },
+      "createdAt": "2024-01-01T12:00:00.000Z",
+      "updatedAt": "2024-01-01T12:00:00.000Z",
+      "isResolved": false,
+      "reactions": [],
+      "replies": [],
+      "inReplyToId": 4
+    },
+    {
+      "id": 5,
+      "body": "Missing unit tests for this new function. Please add test coverage.",
+      "author": {
+        "login": "coderabbitai[bot]",
+        "type": "Bot",
+        "id": 12345
+      },
+      "createdAt": "2024-01-01T10:00:00.000Z",
+      "updatedAt": "2024-01-01T10:00:00.000Z",
+      "isResolved": false,
+      "reactions": [
+        {
+          "type": "thumbs_up",
+          "user": {
+            "login": "developer1",
+            "type": "User",
+            "id": 67890
+          },
+          "createdAt": "2024-01-01T10:05:00.000Z"
+        }
+      ],
+      "replies": []
+    }
+  ]
+}
