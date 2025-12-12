@@ -186,10 +186,14 @@ export class GitHubClient implements IGitHubClient {
       // Filter PRs by time period and convert to our format
       for (const pr of prs) {
         const createdAt = new Date(pr.created_at);
+        const updatedAt = new Date(pr.updated_at);
         
-        // If PR is older than our period, we can stop (since they're sorted by updated desc)
-        if (createdAt < period.start) {
+        if (updatedAt < period.start) {
           return pullRequests;
+        }
+
+        if (createdAt < period.start) {
+          continue;
         }
 
         // Include PR if it's within our time period
