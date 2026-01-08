@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { PullRequest, Comment, DateRange } from '../types/core';
+import { PullRequest, Comment, DateRange } from './types/core';
 
 /**
  * Structure for collected data storage

@@ -3,8 +3,8 @@
  * Implements Requirements 2.4, 2.5, 2.6
  */
 
-import { IDataProcessor } from '../types/interfaces';
-import { PullRequest, Comment, DateRange, Reaction, User } from '../types/core';
+import { IDataProcessor } from './types/interfaces';
+import { PullRequest, Comment, DateRange, Reaction, User } from './types/core';
 
 /**
  * Data processor implementation for reaction classification and reply detection

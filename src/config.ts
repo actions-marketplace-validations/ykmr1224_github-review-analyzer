@@ -2,7 +2,7 @@
  * Minimal configuration management system for GitHub PR metrics analyzer
  */
 
-import { DateRange } from '../types/core';
+import { DateRange } from './types/core';
 
 /**
  * Main configuration interface - minimal viable configuration
@@ -263,4 +263,4 @@ export class ConfigurationError extends Error {
 }
 
 // Import the interface to ensure compatibility
-import { IConfigurationProvider } from '../types/interfaces';
+import { IConfigurationProvider } from './types/interfaces';

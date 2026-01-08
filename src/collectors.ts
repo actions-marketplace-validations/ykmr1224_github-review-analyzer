@@ -2,9 +2,9 @@
  * Data collection services for GitHub PR metrics analysis
  */
 
-import { IDataCollector, IGitHubClient } from '../types/interfaces';
-import { PullRequest, Comment, Reaction } from '../types/core';
-import { AnalysisConfig, RepositoryConfig } from '../config';
+import { IDataCollector, IGitHubClient } from './types/interfaces';
+import { PullRequest, Comment, Reaction } from './types/core';
+import { AnalysisConfig, RepositoryConfig } from './config';
 
 /**
  * Data collector implementation for GitHub PR metrics

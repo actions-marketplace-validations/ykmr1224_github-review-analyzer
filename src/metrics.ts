@@ -3,8 +3,8 @@
  * Implements Requirements 2.1, 2.2, 2.3, 2.7, 5.3
  */
 
-import { IMetricsCalculator } from '../types/interfaces';
-import { PullRequest, Comment, MetricsSummary, DetailedMetrics, Reaction } from '../types/core';
+import { IMetricsCalculator } from './types/interfaces';
+import { PullRequest, Comment, MetricsSummary, DetailedMetrics, Reaction } from './types/core';
 
 /**
  * Comment classification types

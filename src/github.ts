@@ -4,9 +4,9 @@
 
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import * as jwt from 'jsonwebtoken';
-import { IGitHubClient, RateLimitInfo } from '../types/interfaces';
-import { AuthConfig, RepositoryConfig } from '../config';
-import { PullRequest, Comment, DateRange, User, Reaction } from '../types/core';
+import { IGitHubClient, RateLimitInfo } from './types/interfaces';
+import { AuthConfig, RepositoryConfig } from './config';
+import { PullRequest, Comment, DateRange, User, Reaction } from './types/core';
 
 /**
  * GitHub API client with rate limiting, retry logic, and pagination

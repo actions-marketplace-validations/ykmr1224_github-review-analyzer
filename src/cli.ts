@@ -6,12 +6,12 @@
  */
 
 import { Command } from 'commander';
-import { ConfigurationManager } from '../config';
-import { GitHubClient } from '../github';
-import { createDataCollector } from '../collectors';
-import { createMetricsCalculator } from '../metrics';
-import { createDataProcessor, ReactionClassifier } from '../processors';
-import { DataStorage } from '../storage';
+import { ConfigurationManager } from './config';
+import { GitHubClient } from './github';
+import { createDataCollector } from './collectors';
+import { createMetricsCalculator } from './metrics';
+import { createDataProcessor, ReactionClassifier } from './processors';
+import { DataStorage } from './storage';
 
 const program = new Command();
 
