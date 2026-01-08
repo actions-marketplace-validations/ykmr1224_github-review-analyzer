@@ -1,0 +1,100 @@
+/**
+ * Analysis command for GitHub PR Metrics CLI
+ */
+
+import { Command } from 'commander';
+import { createMetricsCalculator } from '../metrics';
+import { createDataProcessor } from '../processors';
+import { DataStorage } from '../storage';
+import { createReportGenerator, createMetricsReport, getFileExtension } from '../reporters';
+
+export const analyzeCommand = new Command('analyze')
+  .description('Analyze collected PR data and generate report')
+  .option('-i, --input <file>', 'Input JSON file path', './temp/pr-data.json')
+  .option('--report <format>', 'Report format (json, markdown)', 'json')
+  .option('--report-output <file>', 'Output file for generated report')
+  .action(async (options) => {
+    try {
+      console.log('🚀 Analyzing PR metrics...');
+
+      // Validate and read data from JSON file
+      if (!DataStorage.fileExists(options.input)) {
+        console.error(`❌ Input file not found: ${options.input}`);
+        console.log('💡 Run "collect" command first to gather data');
+        process.exit(1);
+      }
+
+      // Validate file structure
+      const validation = DataStorage.validateDataFile(options.input);
+      if (!validation.isValid) {
+        console.error('❌ Invalid data file format:');
+        validation.errors.forEach(error => console.error(`   - ${error}`));
+        process.exit(1);
+      }
+      
+      const { prs, comments, metadata } = await DataStorage.loadCollectedData(options.input);
+      console.log(`📊 Loaded ${metadata.totalPRs} PRs, ${metadata.totalComments} comments`);
+
+      if (comments.length === 0) {
+        console.log(`ℹ️  No comments found from reviewer: ${metadata.reviewer}`);
+        return;
+      }
+
+      // Process data and calculate metrics
+      console.log('🔄 Processing metrics...');
+      const processor = createDataProcessor();
+      const processedComments = processor.classifyReactions(
+        processor.detectReplies(
+          processor.detectResolution(comments)
+        )
+      );
+
+      const calculator = createMetricsCalculator();
+      const summary = calculator.calculateSummary(prs, processedComments);
+      const detailed = calculator.calculateDetailed(prs, processedComments);
+
+      // Validate report format
+      const format = options.report.toLowerCase();
+      if (!['json', 'markdown'].includes(format)) {
+        console.error('❌ Invalid report format. Supported formats: json, markdown');
+        process.exit(1);
+      }
+
+      // Generate report
+      console.log(`📄 Generating ${format.toUpperCase()} report...`);
+      
+      const report = createMetricsReport(
+        metadata.repository,
+        {
+          start: new Date(metadata.period.start),
+          end: new Date(metadata.period.end)
+        },
+        metadata.reviewer,
+        summary,
+        detailed
+      );
+
+      const generator = createReportGenerator();
+      const reportContent = await generator.generateReport(report, {
+        format: format as 'json' | 'markdown',
+        includeDetailed: true
+      });
+
+      // Determine output file path
+      let outputPath = options.reportOutput;
+      if (!outputPath) {
+        const baseName = options.input.replace(/\.[^/.]+$/, ''); // Remove extension
+        const extension = getFileExtension(format as 'json' | 'markdown');
+        outputPath = `${baseName}-report${extension}`;
+      }
+
+      // Write report to file
+      const fs = await import('fs/promises');
+      await fs.writeFile(outputPath, reportContent, 'utf8');
+      console.log(`✅ Report saved to: ${outputPath}`);
+
+    } catch (error) {
+      console.error('❌ Error:', error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });

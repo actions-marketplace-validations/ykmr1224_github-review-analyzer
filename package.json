@@ -4,12 +4,12 @@
   "description": "A comprehensive metrics collection and reporting tool that analyzes GitHub Pull Request feedback effectiveness with professional report generation",
   "main": "dist/index.js",
   "bin": {
-    "github-pr-metrics": "dist/cli.js"
+    "github-pr-metrics": "dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/cli.js",
-    "dev": "ts-node src/cli.ts",
+    "start": "node dist/cli/index.js",
+    "dev": "ts-node src/cli/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
