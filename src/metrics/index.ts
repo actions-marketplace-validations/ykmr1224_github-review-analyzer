@@ -7,6 +7,105 @@ import { IMetricsCalculator } from '../types/interfaces';
 import { PullRequest, Comment, MetricsSummary, DetailedMetrics, Reaction } from '../types/core';
 
 /**
+ * Comment classification types
+ */
+export type CommentType = 'suggestion' | 'issue' | 'question' | 'praise' | 'unknown';
+
+/**
+ * Comment analytics utilities
+ */
+export class CommentAnalytics {
+  /**
+   * Simple comment classification based on keywords
+   */
+  static classifyComment(comment: Comment): CommentType {
+    const body = comment.body.toLowerCase();
+    
+    // Check for suggestions
+    if (body.includes('suggest') || body.includes('recommend') || body.includes('consider') || body.includes('should')) {
+      return 'suggestion';
+    }
+    
+    // Check for issues
+    if (body.includes('issue') || body.includes('problem') || body.includes('error') || body.includes('bug') || body.includes('fix')) {
+      return 'issue';
+    }
+    
+    // Check for questions
+    if (body.includes('?') || body.includes('why') || body.includes('how') || body.includes('what')) {
+      return 'question';
+    }
+    
+    // Check for praise
+    if (body.includes('good') || body.includes('great') || body.includes('excellent') || body.includes('nice')) {
+      return 'praise';
+    }
+    
+    return 'unknown';
+  }
+
+  /**
+   * Get classification statistics
+   */
+  static getClassificationStats(comments: Comment[]): Record<CommentType, number> {
+    const stats: Record<CommentType, number> = {
+      suggestion: 0,
+      issue: 0,
+      question: 0,
+      praise: 0,
+      unknown: 0,
+    };
+    
+    for (const comment of comments) {
+      const type = CommentAnalytics.classifyComment(comment);
+      stats[type]++;
+    }
+    
+    return stats;
+  }
+
+  /**
+   * Calculate sentiment score for a comment
+   */
+  static calculateSentiment(comment: Comment): number {
+    const body = comment.body.toLowerCase();
+    let score = 0;
+
+    // Positive indicators
+    const positiveWords = ['good', 'great', 'excellent', 'nice', 'perfect', 'awesome', 'thanks', 'helpful'];
+    for (const word of positiveWords) {
+      if (body.includes(word)) score += 1;
+    }
+
+    // Negative indicators
+    const negativeWords = ['bad', 'wrong', 'error', 'issue', 'problem', 'fix', 'broken', 'incorrect'];
+    for (const word of negativeWords) {
+      if (body.includes(word)) score -= 1;
+    }
+
+    return score;
+  }
+
+  /**
+   * Get sentiment statistics
+   */
+  static getSentimentStats(comments: Comment[]): { positive: number; negative: number; neutral: number } {
+    let positive = 0;
+    let negative = 0;
+    let neutral = 0;
+
+    for (const comment of comments) {
+      const sentiment = CommentAnalytics.calculateSentiment(comment);
+      if (sentiment > 0) positive++;
+      else if (sentiment < 0) negative++;
+      else neutral++;
+    }
+
+    return { positive, negative, neutral };
+  }
+}
+
+/**
  * Core metrics calculator implementation
  * Handles counting, statistical calculations, and edge cases
  */

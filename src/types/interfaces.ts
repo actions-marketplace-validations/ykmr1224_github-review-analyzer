@@ -82,23 +82,7 @@ export interface IReportGenerator {
   validateOutput(output: string, format: string): boolean;
 }
 
-/**
- * Plugin system interfaces
- */
-export interface IPluginRegistry {
-  loadPlugin(name: string): Promise<IMetricPlugin>;
-  registerPlugin(plugin: IMetricPlugin): void;
-  listPlugins(): string[];
-  validatePlugin(plugin: IMetricPlugin): boolean;
-}
 
-export interface IMetricPlugin {
-  name: string;
-  version: string;
-  description: string;
-  calculate(data: any): any;
-  validate(input: any): boolean;
-}
 
 /**
  * Template system interface

@@ -35,10 +35,8 @@ export class DataProcessor implements IDataProcessor {
       return [];
     }
 
-    const normalizedUserName = userName.toLowerCase().trim();
-    
     return comments.filter(comment => 
-      comment.author.login.toLowerCase().trim() === normalizedUserName
+      comment.author.login.toLowerCase().trim() === userName.toLowerCase().trim()
     );
   }
 

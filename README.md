@@ -30,11 +30,15 @@ npm run build
 
 ### 4. Run Analysis
 ```bash
-# Using npm script
-npm start analyze
+# Step 1: Collect data from GitHub
+npm start collect --repo owner/repo --reviewer coderabbitai --days 30
 
-# Or directly with options
-npm run dev analyze --repo owner/repo --reviewer coderabbitai --days 30
+# Step 2: Analyze the collected data
+npm start analyze --input ./temp/pr-data.json --detailed
+
+# Or use development mode
+npm run dev collect --repo owner/repo --reviewer coderabbitai --days 30
+npm run dev analyze --input ./temp/pr-data.json
 
 # Show current configuration
 npm run dev config
@@ -42,44 +46,78 @@ npm run dev config
 
 ## CLI Usage
 
+The tool provides three main commands:
+
+### Collect Command
+Collects PR data from GitHub and saves to JSON file:
+```bash
+github-pr-metrics collect [options]
+
+Options:
+  -r, --repo <repo>      Repository in format owner/repo
+  -u, --reviewer <user>  Reviewer username to analyze
+  -d, --days <days>      Number of days to analyze (default: "30")
+  -o, --output <file>    Output JSON file path (default: "./temp/pr-data.json")
+  -h, --help            Display help for command
+```
+
 ### Analyze Command
+Analyzes collected PR data from JSON file:
 ```bash
 github-pr-metrics analyze [options]
 
 Options:
-  -r, --repo <repo>      Repository in format owner/repo
-  -u, --reviewer <user>  Reviewer username to analyze (default: "coderabbitai")
-  -d, --days <days>      Number of days to analyze (default: "30")
+  -i, --input <file>     Input JSON file path (default: "./temp/pr-data.json")
+  --detailed            Show detailed comment analysis
   -h, --help            Display help for command
+```
+
+### Config Command
+Shows current configuration:
+```bash
+github-pr-metrics config
 ```
 
 ### Examples
 ```bash
-# Analyze last 30 days for CodeRabbit in your configured repo
-npm run dev analyze
+# Collect data for last 30 days from your configured repo
+npm run dev collect
 
-# Analyze specific repository for last 7 days
-npm run dev analyze --repo microsoft/vscode --days 7
+# Collect from specific repository for last 7 days
+npm run dev collect --repo microsoft/vscode --days 7 --reviewer dependabot
 
-# Analyze different reviewer
-npm run dev analyze --reviewer github-copilot --days 14
+# Analyze collected data with detailed output
+npm run dev analyze --detailed
+
+# Full workflow example
+npm run dev collect --repo microsoft/vscode --reviewer coderabbitai --days 14
+npm run dev analyze --input ./temp/pr-data.json --detailed
 ```
 
 ## What It Does
 
 Currently implemented features:
 - ✅ **Data Collection**: Retrieves PRs and comments from GitHub API
-- ✅ **Authentication**: Supports GitHub tokens and GitHub App authentication
+- ✅ **Authentication**: Supports GitHub tokens and GitHub App authentication  
 - ✅ **Comment Analysis**: Processes reviewer comments with metadata
 - ✅ **Reaction Tracking**: Collects and categorizes emoji reactions
 - ✅ **Reply Detection**: Identifies comment threads and replies
 - ✅ **Time Filtering**: Analyzes data within specified date ranges
+- ✅ **Metrics Calculation**: Comprehensive statistics and effectiveness indicators
+- ✅ **Data Storage**: JSON file-based data persistence
+- ✅ **Detailed Analysis**: Resolution rates, engagement metrics, sentiment analysis
 
-The tool will display:
-- Pull request summaries
-- Comment statistics
-- Reaction breakdowns
-- Basic metrics (resolution rates, engagement, etc.)
+The tool operates in two phases:
+1. **Collection Phase**: Gathers PR and comment data from GitHub API and saves to JSON
+2. **Analysis Phase**: Processes the collected data and generates comprehensive metrics
+
+### Sample Output
+The analysis provides:
+- Pull request summaries with state and author information
+- Comment statistics with resolution and reaction tracking  
+- Comprehensive metrics including resolution rates, engagement rates, and sentiment analysis
+- Effectiveness indicators with color-coded ratings (🟢 Excellent, 🟡 Good, 🔴 Needs Improvement)
+- Detailed breakdowns by PR state, comment type, and reaction type
 
 ## Development
 
@@ -90,7 +128,11 @@ npm test
 
 ### Development Mode
 ```bash
-npm run dev analyze --repo your-org/your-repo
+# Collect data in development mode
+npm run dev collect --repo your-org/your-repo --reviewer coderabbitai --days 30
+
+# Analyze collected data
+npm run dev analyze --input ./temp/pr-data.json --detailed
 ```
 
 ### Build
@@ -116,11 +158,15 @@ npm run build
 ## Usage
 
 ```bash
-# CLI usage
-npm run start -- --repo owner/repo --period 30d --ai-reviewer coderabbitai
+# Step 1: Collect data from GitHub
+npm run start collect --repo owner/repo --period 30d --ai-reviewer coderabbitai
 
-# Development
-npm run dev -- --help
+# Step 2: Analyze collected data  
+npm run start analyze --input ./temp/pr-data.json
+
+# Development mode
+npm run dev collect --help
+npm run dev analyze --help
 ```
 
 ## Testing

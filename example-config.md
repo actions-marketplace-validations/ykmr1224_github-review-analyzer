@@ -1,6 +1,8 @@
-# Minimal Configuration Example
+# Configuration Example
 
 ## Environment Variables
+
+The tool uses environment variables for configuration. Copy `.env.example` to `.env` and customize:
 
 ```bash
 # Required
@@ -16,7 +18,11 @@ OUTPUT_FORMAT=json
 OUTPUT_DIR=./reports
 ```
 
-## Usage
+## Configuration Loading
+
+The configuration system loads settings in this order:
+1. Environment variables (highest priority)
+2. Default values (lowest priority)
 
 ```typescript
 import { ConfigurationManager } from './src/config';
@@ -27,7 +33,7 @@ const config = await configManager.loadConfig();
 console.log(config);
 // {
 //   repository: { owner: 'microsoft', repo: 'vscode' },
-//   auth: { token: 'ghp_your_token_here' },
+//   auth: { type: 'token', token: 'ghp_your_token_here' },
 //   analysis: {
 //     reviewerUserName: 'coderabbitai',
 //     timePeriod: { start: Date, end: Date }
@@ -36,15 +42,47 @@ console.log(config);
 // }
 ```
 
-## What Was Simplified
+## CLI Override Options
 
-- Removed complex validation schemas
-- Removed plugin system configuration
-- Removed advanced options (rate limiting, caching, retry)
-- Removed multiple authentication methods (only token now)
-- Removed file-based configuration loading
-- Removed CLI argument parsing
-- Simplified to only environment variables + defaults
-- Removed complex merging and nested property setting
+CLI arguments override environment variables:
 
-This gives us exactly what we need to start implementing the core functionality!
+```bash
+# Override repository
+npm run dev collect --repo owner/repo
+
+# Override reviewer
+npm run dev collect --reviewer github-copilot
+
+# Override time period  
+npm run dev collect --days 14
+
+# Override output file
+npm run dev collect --output ./custom-data.json
+```
+
+## Authentication Options
+
+### Personal Access Token (Recommended)
+```bash
+GITHUB_AUTH_TYPE=token
+GITHUB_TOKEN=ghp_your_token_here
+```
+
+### GitHub App Authentication
+```bash
+GITHUB_AUTH_TYPE=app
+GITHUB_APP_ID=your_app_id
+GITHUB_APP_PRIVATE_KEY=your_private_key_here
+GITHUB_APP_INSTALLATION_ID=your_installation_id
+```
+
+## Simplified Architecture
+
+This configuration system provides:
+- Environment variable-based configuration
+- CLI argument overrides
+- Secure credential handling
+- Default value fallbacks
+- Type-safe configuration objects
+
+The system focuses on essential functionality without complex validation schemas or file-based configuration loading.

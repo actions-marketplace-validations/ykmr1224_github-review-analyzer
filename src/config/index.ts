@@ -16,6 +16,7 @@ export interface AppConfig {
   analysis: AnalysisConfig;
   /** Output settings */
   output?: OutputConfig;
+
 }
 
 /**
@@ -68,6 +69,18 @@ export interface OutputConfig {
 }
 
 /**
+ * Simple AI reviewer utilities
+ */
+export class AIReviewerUtils {
+  /**
+   * Check if username matches the configured AI reviewer
+   */
+  static isAIReviewer(username: string, configuredReviewerName: string): boolean {
+    return username.toLowerCase().trim() === configuredReviewerName.toLowerCase().trim();
+  }
+}
+
+/**
  * Simple validation error interface
  */
 export interface ValidationError {
@@ -90,6 +103,7 @@ export const DEFAULT_CONFIG: Partial<AppConfig> = {
     format: 'json',
     outputDir: './reports',
   },
+
 };
 
 /**
@@ -127,6 +141,7 @@ export class ConfigurationManager implements IConfigurationProvider {
         format: (process.env.OUTPUT_FORMAT as 'json' | 'markdown') || DEFAULT_CONFIG.output?.format || 'json',
         outputDir: process.env.OUTPUT_DIR || DEFAULT_CONFIG.output?.outputDir || './reports',
       },
+
     };
 
     // Basic validation
@@ -233,6 +248,8 @@ export class ConfigurationManager implements IConfigurationProvider {
     // For MVP, we don't need file saving
     return Promise.resolve();
   }
+
+
 }
 
 /**

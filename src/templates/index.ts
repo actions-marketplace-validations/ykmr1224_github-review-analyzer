@@ -1,2 +1,0 @@
-// Report templates - placeholder
-export {};
