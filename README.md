@@ -114,6 +114,7 @@ Currently implemented features:
 - ✅ **Comment Analysis**: Processes reviewer comments with metadata
 - ✅ **Reaction Tracking**: Collects and categorizes emoji reactions
 - ✅ **Reply Detection**: Identifies comment threads and replies
+- ✅ **CodeRabbit Integration**: Automatically detects "Addressed in commit" messages as positive feedback
 - ✅ **Time Filtering**: Analyzes data within specified date ranges
 - ✅ **Metrics Calculation**: Comprehensive statistics and effectiveness indicators
 - ✅ **Data Storage**: JSON file-based data persistence
@@ -262,68 +263,6 @@ tests/
 
 The tool can be configured through environment variables, configuration files, or CLI arguments. See the documentation for detailed configuration options.
 
-## CI/CD Integration
-
-### GitHub Actions Example
-```yaml
-name: Weekly PR Metrics Report
-on:
-  schedule:
-    - cron: '0 9 * * 1'  # Every Monday at 9 AM
-  workflow_dispatch:
-
-jobs:
-  generate-metrics:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Build project
-        run: npm run build
-        
-      - name: Generate PR Metrics Report
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm start collect --repo ${{ github.repository }} --reviewer coderabbit[bot] --days 7
-          npm start analyze --input ./temp/pr-data.json --report markdown --report-output ./reports/weekly-metrics.md
-          npm start analyze --input ./temp/pr-data.json --report json --report-output ./reports/weekly-metrics.json
-          
-      - name: Upload Reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr-metrics-reports
-          path: ./reports/
-```
-
-### Automated Reporting Script
-```bash
-#!/bin/bash
-# weekly-report.sh - Generate weekly metrics reports
-
-DATE=$(date +%Y-%m-%d)
-REPO="myorg/myrepo"
-REVIEWER="coderabbit[bot]"
-
-echo "Generating weekly PR metrics report for $REPO..."
-
-# Collect data
-npm start collect --repo "$REPO" --reviewer "$REVIEWER" --days 7
-
-# Generate reports
-npm start analyze --input ./temp/pr-data.json --report markdown --report-output "./reports/$DATE-weekly-metrics.md"
-npm start analyze --input ./temp/pr-data.json --report json --report-output "./reports/$DATE-weekly-metrics.json"
-
-echo "Reports generated in ./reports/"
-```
 
 ## License
 

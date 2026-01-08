@@ -167,7 +167,7 @@ export class MetricsCalculator implements IMetricsCalculator {
         byType: this.calculateReactionsByType(comments),
         positiveVsNegative: this.calculatePositiveVsNegativeReactions(comments)
       },
-      prDetails: this.calculatePRDetails(prs, repository || 'owner/repo')
+      prDetails: this.calculatePRDetails(prs, comments, repository || 'owner/repo')
     };
   }
 
@@ -427,10 +427,11 @@ export class MetricsCalculator implements IMetricsCalculator {
     };
   }
 
-  private calculatePRDetails(prs: PullRequest[], repository: string): PRDetails[] {
+  private calculatePRDetails(prs: PullRequest[], processedComments: Comment[], repository: string): PRDetails[] {
     return prs.map(pr => {
-      // Get comments for this specific PR
-      const prComments = pr.comments || [];
+      // Get processed comments for this specific PR by matching comment IDs
+      const prCommentIds = (pr.comments || []).map(c => c.id);
+      const prComments = processedComments.filter(comment => prCommentIds.includes(comment.id));
       
       // Count AI comments (assuming AI comments are those by the reviewer)
       const aiComments = prComments.length;
@@ -438,7 +439,7 @@ export class MetricsCalculator implements IMetricsCalculator {
       // Count resolved AI comments
       const resolvedAiComments = prComments.filter(comment => comment.isResolved).length;
       
-      // Count positive and negative reactions on AI comments
+      // Count positive and negative reactions on AI comments (including synthetic reactions)
       let positiveReactions = 0;
       let negativeReactions = 0;
       

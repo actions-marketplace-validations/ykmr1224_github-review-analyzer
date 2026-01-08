@@ -12,6 +12,7 @@ export interface Reaction {
   type: 'thumbs_up' | 'thumbs_down' | 'laugh' | 'hooray' | 'confused' | 'heart' | 'rocket' | 'eyes' | 'unknown';
   user: User;
   createdAt: Date;
+  synthetic?: boolean; // Optional flag to mark synthetic reactions (e.g., from CodeRabbit resolution messages)
 }
 
 export interface Comment {

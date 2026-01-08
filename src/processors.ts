@@ -58,20 +58,51 @@ export class DataProcessor implements IDataProcessor {
   /**
    * Classify reactions into positive/negative categories
    * Implements Requirements 2.4, 2.5
+   * Also detects CodeRabbit "Addressed in commit" messages as synthetic positive reactions
    */
   classifyReactions(comments: Comment[]): Comment[] {
     if (!comments || comments.length === 0) {
       return [];
     }
 
-    return comments.map(comment => ({
-      ...comment,
-      reactions: comment.reactions.map(reaction => ({
+    return comments.map(comment => {
+      // Start with existing reactions
+      let reactions = comment.reactions.map(reaction => ({
         ...reaction,
         // Add classification metadata without changing the core structure
         type: this.normalizeReactionType(reaction.type)
-      }))
-    }));
+      }));
+
+      // Add synthetic positive reaction for CodeRabbit "Addressed in commit" messages
+      if (this.hasCodeRabbitResolutionMessage(comment)) {
+        const syntheticReaction = {
+          type: 'thumbs_up' as const,
+          user: comment.author, // The author of the resolution message
+          createdAt: comment.updatedAt || comment.createdAt,
+          synthetic: true // Mark as synthetic to distinguish from real reactions
+        };
+        reactions = [...reactions, syntheticReaction];
+      }
+
+      return {
+        ...comment,
+        reactions
+      };
+    });
+  }
+
+  /**
+   * Check if a comment contains CodeRabbit "Addressed in commit" message
+   */
+  private hasCodeRabbitResolutionMessage(comment: Comment): boolean {
+    const patterns = [
+      /addressed in commit [a-f0-9]{6,40}/i,
+      /fixed in commit [a-f0-9]{6,40}/i,
+      /resolved in commit [a-f0-9]{6,40}/i,
+      /updated in commit [a-f0-9]{6,40}/i
+    ];
+
+    return patterns.some(pattern => pattern.test(comment.body));
   }
 
   /**
@@ -381,6 +412,7 @@ export class ReactionClassifier {
   /**
    * Calculate reaction sentiment score
    * Returns a score between -1 (all negative) and 1 (all positive)
+   * Includes synthetic reactions in the calculation
    */
   static calculateSentimentScore(comment: Comment): number {
     const positive = this.getPositiveReactions(comment).length;
@@ -392,6 +424,32 @@ export class ReactionClassifier {
     }
 
     return (positive - negative) / total;
+  }
+
+  /**
+   * Get only real (non-synthetic) positive reactions from a comment
+   */
+  static getRealPositiveReactions(comment: Comment): Reaction[] {
+    if (!comment.reactions) {
+      return [];
+    }
+
+    return comment.reactions.filter(reaction => 
+      this.isPositiveReaction(reaction.type) && !reaction.synthetic
+    );
+  }
+
+  /**
+   * Get only synthetic positive reactions from a comment
+   */
+  static getSyntheticPositiveReactions(comment: Comment): Reaction[] {
+    if (!comment.reactions) {
+      return [];
+    }
+
+    return comment.reactions.filter(reaction => 
+      this.isPositiveReaction(reaction.type) && reaction.synthetic
+    );
   }
 
   private static isPositiveReaction(type: Reaction['type']): boolean {
@@ -459,6 +517,73 @@ export class ReplyDetector {
 }
 
 /**
+ * CodeRabbit detection utilities
+ * Provides functions for detecting CodeRabbit-specific feedback patterns
+ */
+export class CodeRabbitDetector {
+  
+  /**
+   * Check if a comment contains CodeRabbit "Addressed in commit" message
+   */
+  static hasAddressedInCommitMessage(comment: Comment): boolean {
+    const patterns = [
+      /addressed in commit [a-f0-9]{6,40}/i,
+      /fixed in commit [a-f0-9]{6,40}/i,
+      /resolved in commit [a-f0-9]{6,40}/i,
+      /updated in commit [a-f0-9]{6,40}/i
+    ];
+
+    return patterns.some(pattern => pattern.test(comment.body));
+  }
+
+  /**
+   * Extract commit hash from CodeRabbit "Addressed in commit" message
+   */
+  static extractCommitHash(comment: Comment): string | null {
+    const pattern = /(?:addressed|fixed|resolved|updated) in commit ([a-f0-9]{6,40})/i;
+    const match = comment.body.match(pattern);
+    return match ? match[1] : null;
+  }
+
+  /**
+   * Check if a comment is from CodeRabbit
+   */
+  static isCodeRabbitComment(comment: Comment): boolean {
+    return comment.author.login.toLowerCase().includes('coderabbit');
+  }
+
+  /**
+   * Count CodeRabbit resolution messages in a list of comments
+   */
+  static countResolutionMessages(comments: Comment[]): number {
+    return comments.filter(comment => 
+      this.hasAddressedInCommitMessage(comment)
+    ).length;
+  }
+
+  /**
+   * Get all CodeRabbit resolution messages from comments
+   */
+  static getResolutionMessages(comments: Comment[]): Comment[] {
+    return comments.filter(comment => 
+      this.hasAddressedInCommitMessage(comment)
+    );
+  }
+
+  /**
+   * Count synthetic positive reactions (from CodeRabbit resolution messages)
+   */
+  static countSyntheticPositiveReactions(comments: Comment[]): number {
+    return comments.reduce((count, comment) => {
+      const syntheticReactions = comment.reactions.filter(reaction => 
+        reaction.synthetic && reaction.type === 'thumbs_up'
+      );
+      return count + syntheticReactions.length;
+    }, 0);
+  }
+}
+
+/**
  * Factory function to create a data processor
  */
 export function createDataProcessor(): IDataProcessor {
@@ -469,7 +594,7 @@ export function createDataProcessor(): IDataProcessor {
  * Example usage:
  * 
  * ```typescript
- * import { createDataProcessor, ReactionClassifier, ReplyDetector } from './processors';
+ * import { createDataProcessor, ReactionClassifier, ReplyDetector, CodeRabbitDetector } from './processors';
  * 
  * const processor = createDataProcessor();
  * 
@@ -481,6 +606,11 @@ export function createDataProcessor(): IDataProcessor {
  * const positiveReactions = ReactionClassifier.getPositiveReactions(comment);
  * const sentimentScore = ReactionClassifier.calculateSentimentScore(comment);
  * const hasReplies = ReplyDetector.hasHumanReplies(comment);
+ * 
+ * // CodeRabbit-specific analysis
+ * const hasResolution = CodeRabbitDetector.hasAddressedInCommitMessage(comment);
+ * const commitHash = CodeRabbitDetector.extractCommitHash(comment);
+ * const resolutionCount = CodeRabbitDetector.countResolutionMessages(comments);
  * ```
  */
 
