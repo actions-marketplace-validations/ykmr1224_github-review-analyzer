@@ -75,11 +75,9 @@ export interface IMetricsCalculator {
  * Report generation interface
  */
 export interface IReportGenerator {
-  generateReport(data: MetricsReport): Promise<string>;
+  generateReport(data: MetricsReport, config?: any): Promise<string>;
   generateJSON(data: MetricsReport): string;
-  generateMarkdown(data: MetricsReport): string;
-  generateHTML(data: MetricsReport): string;
-  validateOutput(output: string, format: string): boolean;
+  generateMarkdown(data: MetricsReport): Promise<string>;
 }
 
 

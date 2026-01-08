@@ -1,7 +1,7 @@
 {
   "name": "github-pr-metrics",
   "version": "1.0.0",
-  "description": "A metrics collection tool that analyzes GitHub Pull Request feedback effectiveness",
+  "description": "A comprehensive metrics collection and reporting tool that analyzes GitHub Pull Request feedback effectiveness with professional report generation",
   "main": "dist/index.js",
   "bin": {
     "github-pr-metrics": "dist/cli.js"
@@ -22,7 +22,11 @@
     "pull-request",
     "ai-reviewer",
     "coderabbit",
-    "analytics"
+    "analytics",
+    "reporting",
+    "markdown",
+    "json",
+    "cli"
   ],
   "author": "",
   "license": "MIT",

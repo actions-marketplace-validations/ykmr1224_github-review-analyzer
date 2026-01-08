@@ -11,7 +11,7 @@ GITHUB_REPOSITORY_NAME=vscode
 GITHUB_TOKEN=ghp_your_token_here
 
 # Optional (with defaults)
-REVIEWER_USERNAME=coderabbitai
+REVIEWER_USERNAME=coderabbit[bot]
 ANALYSIS_START_DATE=2024-01-01
 ANALYSIS_END_DATE=2024-12-31
 OUTPUT_FORMAT=json
@@ -35,7 +35,7 @@ console.log(config);
 //   repository: { owner: 'microsoft', repo: 'vscode' },
 //   auth: { type: 'token', token: 'ghp_your_token_here' },
 //   analysis: {
-//     reviewerUserName: 'coderabbitai',
+//     reviewerUserName: 'coderabbit[bot]',
 //     timePeriod: { start: Date, end: Date }
 //   },
 //   output: { format: 'json', outputDir: './reports' }
@@ -51,13 +51,31 @@ CLI arguments override environment variables:
 npm run dev collect --repo owner/repo
 
 # Override reviewer
-npm run dev collect --reviewer github-copilot
+npm run dev collect --reviewer coderabbit[bot]
 
 # Override time period  
 npm run dev collect --days 14
 
 # Override output file
 npm run dev collect --output ./custom-data.json
+
+# Generate reports with custom settings
+npm run dev report --format markdown --output ./reports/custom-report.md
+npm run dev analyze --report json --report-output ./reports/analysis.json
+```
+
+## Report Generation Options
+
+### Integrated Analysis + Reporting
+```bash
+# Analyze and generate Markdown report
+npm run dev analyze --input ./temp/pr-data.json --report markdown
+
+# Analyze and generate JSON report with custom output
+npm run dev analyze --input ./temp/pr-data.json --report json --report-output ./reports/analysis.json
+
+# Analyze with detailed console output and generate report
+npm run dev analyze --input ./temp/pr-data.json --detailed --report markdown --report-output ./reports/detailed-analysis.md
 ```
 
 ## Authentication Options

@@ -10,8 +10,9 @@ import { ConfigurationManager } from './config';
 import { GitHubClient } from './github';
 import { createDataCollector } from './collectors';
 import { createMetricsCalculator } from './metrics';
-import { createDataProcessor, ReactionClassifier } from './processors';
+import { createDataProcessor } from './processors';
 import { DataStorage } from './storage';
+import { createReportGenerator, createMetricsReport, getFileExtension } from './reporters';
 
 const program = new Command();
 
@@ -29,11 +30,9 @@ program
   .option('-o, --output <file>', 'Output JSON file path', './temp/pr-data.json')
   .action(async (options) => {
     try {
-      console.log('🚀 GitHub PR Metrics Analyzer');
-      console.log('================================\n');
+      console.log('🚀 Collecting PR data...');
 
       // Load configuration
-      console.log('📋 Loading configuration...');
       const configManager = new ConfigurationManager();
       const config = await configManager.loadConfig();
 
@@ -64,46 +63,29 @@ program
         config.analysis.timePeriod = { start: startDate, end: endDate };
       }
 
-      console.log(`📊 Repository: ${config.repository.owner}/${config.repository.repo}`);
-      console.log(`👤 Reviewer: ${config.analysis.reviewerUserName}`);
-      console.log(`📅 Period: ${config.analysis.timePeriod.start.toISOString().split('T')[0]} to ${config.analysis.timePeriod.end.toISOString().split('T')[0]}\n`);
+      console.log(`📊 ${config.repository.owner}/${config.repository.repo} | ${config.analysis.reviewerUserName} | ${options.days} days`);
 
       // Initialize GitHub client
-      console.log('🔐 Authenticating with GitHub...');
       const githubClient = new GitHubClient();
       await githubClient.authenticate(config.auth);
-      console.log('✅ Authentication successful\n');
 
       // Create data collector
       const collector = createDataCollector(githubClient);
 
       // Collect pull requests
-      console.log('📥 Collecting pull requests...');
       const prs = await collector.collectPullRequests(config.analysis, config.repository);
-      console.log(`✅ Found ${prs.length} pull requests\n`);
+      console.log(`📥 Found ${prs.length} pull requests`);
 
       if (prs.length === 0) {
         console.log('ℹ️  No pull requests found in the specified time period.');
         return;
       }
 
-      // Display PR summary
-      console.log('📋 Pull Requests Summary:');
-      console.log('========================');
-      prs.forEach((pr, index) => {
-        console.log(`${index + 1}. #${pr.number}: ${pr.title}`);
-        console.log(`   State: ${pr.state} | Author: ${pr.author.login}`);
-        console.log(`   Created: ${pr.createdAt.toISOString().split('T')[0]}`);
-        console.log('');
-      });
-
       // Collect comments
-      console.log('💬 Collecting reviewer comments...');
       const comments = await collector.collectComments(prs, config.analysis.reviewerUserName, config.repository);
-      console.log(`✅ Found ${comments.length} comments from ${config.analysis.reviewerUserName}\n`);
+      console.log(`💬 Found ${comments.length} comments from ${config.analysis.reviewerUserName}`);
 
       // Save to JSON file using DataStorage
-      console.log('💾 Saving data to JSON file...');
       const outputPath = options.output;
       
       await DataStorage.saveCollectedData(
@@ -118,15 +100,6 @@ program
       );
       
       console.log(`✅ Data saved to: ${outputPath}`);
-      
-      console.log('\n📊 Collection Summary:');
-      console.log(`   Repository: ${config.repository.owner}/${config.repository.repo}`);
-      console.log(`   Reviewer: ${config.analysis.reviewerUserName}`);
-      console.log(`   Period: ${config.analysis.timePeriod.start.toISOString().split('T')[0]} to ${config.analysis.timePeriod.end.toISOString().split('T')[0]}`);
-      console.log(`   Total PRs: ${prs.length}`);
-      console.log(`   Total Comments: ${comments.length}`);
-
-      console.log('\n🎉 Data collection complete!');
 
     } catch (error) {
       console.error('❌ Error:', error instanceof Error ? error.message : String(error));
@@ -136,20 +109,18 @@ program
 
 program
   .command('analyze')
-  .description('Analyze collected PR data from JSON file')
+  .description('Analyze collected PR data and generate report')
   .option('-i, --input <file>', 'Input JSON file path', './temp/pr-data.json')
-  .option('--detailed', 'Show detailed comment analysis')
+  .option('--report <format>', 'Report format (json, markdown)', 'json')
+  .option('--report-output <file>', 'Output file for generated report')
   .action(async (options) => {
     try {
-      console.log('🚀 GitHub PR Metrics Analyzer - Analysis Mode');
-      console.log('=============================================\n');
+      console.log('🚀 Analyzing PR metrics...');
 
       // Validate and read data from JSON file
-      console.log('📖 Reading data from JSON file...');
-      
       if (!DataStorage.fileExists(options.input)) {
         console.error(`❌ Input file not found: ${options.input}`);
-        console.log('💡 Run "collect" command first to gather data');
+        console.log('�e Run "collect" command first to gather data');
         process.exit(1);
       }
 
@@ -162,24 +133,15 @@ program
       }
       
       const { prs, comments, metadata } = await DataStorage.loadCollectedData(options.input);
-      console.log('✅ Data loaded successfully\n');
-
-      // Display metadata
-      console.log('📋 Analysis Metadata:');
-      console.log(`   Repository: ${metadata.repository}`);
-      console.log(`   Reviewer: ${metadata.reviewer}`);
-      console.log(`   Period: ${metadata.period.start.split('T')[0]} to ${metadata.period.end.split('T')[0]}`);
-      console.log(`   Data collected: ${new Date(metadata.collectedAt).toLocaleString()}`);
-      console.log(`   Total PRs: ${metadata.totalPRs}`);
-      console.log(`   Total Comments: ${metadata.totalComments}\n`);
+      console.log(`📊 Loaded ${metadata.totalPRs} PRs, ${metadata.totalComments} comments`);
 
       if (comments.length === 0) {
         console.log(`ℹ️  No comments found from reviewer: ${metadata.reviewer}`);
         return;
       }
 
-      // Process data for enhanced analysis
-      console.log('🔄 Processing data and calculating metrics...');
+      // Process data and calculate metrics
+      console.log('🔄 Processing metrics...');
       const processor = createDataProcessor();
       const processedComments = processor.classifyReactions(
         processor.detectReplies(
@@ -187,90 +149,55 @@ program
         )
       );
 
-      // Calculate comprehensive metrics
       const calculator = createMetricsCalculator();
       const summary = calculator.calculateSummary(prs, processedComments);
       const detailed = calculator.calculateDetailed(prs, processedComments);
-      console.log('✅ Metrics calculation complete\n');
 
-      // Show detailed comment analysis if requested
-      if (options.detailed) {
-        console.log('💬 Detailed Comments Analysis:');
-        console.log('=============================');
-        processedComments.forEach((comment, index) => {
-          const positiveReactions = ReactionClassifier.getPositiveReactions(comment);
-          const negativeReactions = ReactionClassifier.getNegativeReactions(comment);
-          const sentimentScore = ReactionClassifier.calculateSentimentScore(comment);
-          
-          console.log(`${index + 1}. Comment ID: ${comment.id}`);
-          console.log(`   Author: ${comment.author.login} (${comment.author.type})`);
-          console.log(`   Created: ${comment.createdAt.toISOString()}`);
-          console.log(`   Resolved: ${comment.isResolved ? '✅' : '❌'}`);
-          console.log(`   Total Reactions: ${comment.reactions.length} | Positive: ${positiveReactions.length} | Negative: ${negativeReactions.length}`);
-          console.log(`   Sentiment Score: ${sentimentScore.toFixed(2)} ${sentimentScore > 0 ? '😊' : sentimentScore < 0 ? '😞' : '😐'}`);
-          console.log(`   Human Replies: ${comment.replies.length}`);
-          if (comment.reactions.length > 0) {
-            const reactionSummary = comment.reactions.reduce((acc, reaction) => {
-              acc[reaction.type] = (acc[reaction.type] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
-            console.log(`   Reaction breakdown: ${JSON.stringify(reactionSummary)}`);
-          }
-          console.log(`   Body preview: ${comment.body.substring(0, 100)}${comment.body.length > 100 ? '...' : ''}`);
-          console.log('');
-        });
+      // Validate report format
+      const format = options.report.toLowerCase();
+      if (!['json', 'markdown'].includes(format)) {
+        console.error('❌ Invalid report format. Supported formats: json, markdown');
+        process.exit(1);
       }
 
-      // Comprehensive metrics analysis
-      console.log('📊 Comprehensive Metrics Analysis:');
-      console.log('==================================');
+      // Generate report
+      console.log(`📄 Generating ${format.toUpperCase()} report...`);
       
-      // Summary metrics
-      console.log('\n📋 Summary Metrics:');
-      console.log(`   Total PRs: ${summary.totalPRs}`);
-      console.log(`   Total Comments: ${summary.totalComments}`);
-      console.log(`   Average Comments per PR: ${summary.averageCommentsPerPR}`);
-      console.log(`   Resolved Comments: ${summary.resolvedComments} (${calculator.calculatePercentages(summary.resolvedComments, summary.totalComments).toFixed(1)}%)`);
-      console.log(`   Comments with Replies: ${summary.repliedComments} (${calculator.calculatePercentages(summary.repliedComments, summary.totalComments).toFixed(1)}%)`);
-      
-      // Reaction analysis
-      console.log('\n👍 Reaction Analysis:');
-      console.log(`   Positive Reactions: ${summary.positiveReactions}`);
-      console.log(`   Negative Reactions: ${summary.negativeReactions}`);
-      const totalReactions = summary.positiveReactions + summary.negativeReactions;
-      if (totalReactions > 0) {
-        console.log(`   Positive Ratio: ${calculator.calculatePercentages(summary.positiveReactions, totalReactions).toFixed(1)}%`);
-        console.log(`   Overall Sentiment: ${summary.positiveReactions > summary.negativeReactions ? '😊 Positive' : summary.positiveReactions < summary.negativeReactions ? '😞 Negative' : '😐 Neutral'}`);
-      }
-      
-      // Detailed breakdowns
-      console.log('\n📈 Detailed Breakdowns:');
-      console.log('   PR States:', JSON.stringify(detailed.prBreakdown.byState, null, 2));
-      console.log('   Comment Types:', JSON.stringify(detailed.commentBreakdown.byType, null, 2));
-      console.log('   Reaction Types:', JSON.stringify(detailed.reactionBreakdown.byType, null, 2));
-      
-      // Effectiveness indicators
-      console.log('\n🎯 Effectiveness Indicators:');
-      const resolutionRate = calculator.calculatePercentages(summary.resolvedComments, summary.totalComments);
-      const engagementRate = calculator.calculatePercentages(summary.repliedComments, summary.totalComments);
-      const positivityRate = totalReactions > 0 ? calculator.calculatePercentages(summary.positiveReactions, totalReactions) : 0;
-      
-      console.log(`   Resolution Rate: ${resolutionRate.toFixed(1)}% ${resolutionRate >= 70 ? '🟢' : resolutionRate >= 40 ? '🟡' : '🔴'}`);
-      console.log(`   Engagement Rate: ${engagementRate.toFixed(1)}% ${engagementRate >= 50 ? '🟢' : engagementRate >= 25 ? '🟡' : '🔴'}`);
-      console.log(`   Positivity Rate: ${positivityRate.toFixed(1)}% ${positivityRate >= 70 ? '🟢' : positivityRate >= 50 ? '🟡' : '🔴'}`);
-      
-      // Overall assessment
-      const overallScore = (resolutionRate + engagementRate + positivityRate) / 3;
-      console.log(`\n🏆 Overall AI Reviewer Effectiveness: ${overallScore.toFixed(1)}% ${overallScore >= 70 ? '🟢 Excellent' : overallScore >= 50 ? '🟡 Good' : '🔴 Needs Improvement'}`);
+      const report = createMetricsReport(
+        metadata.repository,
+        {
+          start: new Date(metadata.period.start),
+          end: new Date(metadata.period.end)
+        },
+        metadata.reviewer,
+        summary,
+        detailed
+      );
 
-      console.log('\n🎉 Analysis complete!');
+      const generator = createReportGenerator();
+      const reportContent = await generator.generateReport(report, {
+        format: format as 'json' | 'markdown',
+        includeDetailed: true
+      });
+
+      // Determine output file path
+      let outputPath = options.reportOutput;
+      if (!outputPath) {
+        const baseName = options.input.replace(/\.[^/.]+$/, ''); // Remove extension
+        const extension = getFileExtension(format as 'json' | 'markdown');
+        outputPath = `${baseName}-report${extension}`;
+      }
+
+      // Write report to file
+      const fs = await import('fs/promises');
+      await fs.writeFile(outputPath, reportContent, 'utf8');
+      console.log(`✅ Report saved to: ${outputPath}`);
 
     } catch (error) {
       console.error('❌ Error:', error instanceof Error ? error.message : String(error));
       process.exit(1);
     }
   });
-
 
 program
   .command('config')
@@ -280,13 +207,10 @@ program
       const configManager = new ConfigurationManager();
       const config = await configManager.loadConfig();
       
-      console.log('📋 Current Configuration:');
-      console.log('========================');
+      console.log('📋 Configuration:');
       console.log(`Repository: ${config.repository.owner}/${config.repository.repo}`);
       console.log(`Reviewer: ${config.analysis.reviewerUserName}`);
-      console.log(`Auth Type: ${config.auth.type}`);
-      
-      
+      console.log(`Period: ${config.analysis.timePeriod.start.toISOString().split('T')[0]} to ${config.analysis.timePeriod.end.toISOString().split('T')[0]}`);
       
     } catch (error) {
       
