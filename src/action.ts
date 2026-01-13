@@ -78,11 +78,6 @@ async function run(): Promise<void> {
       core.setOutput(`report-${ext}-path`, artifact);
     });
     
-    // Set numeric outputs
-    core.setOutput('total-prs', result.summary.totalPRs.toString());
-    core.setOutput('total-comments', result.summary.totalComments.toString());
-    core.setOutput('average-comments-per-pr', result.summary.averageCommentsPerPR.toString());
-    
     // Show the generated markdown report in the workflow summary
     const markdownReportPath = result.artifacts.find(artifact => artifact.endsWith('.md'));
     

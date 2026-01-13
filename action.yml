@@ -44,15 +44,6 @@ outputs:
   
   report-markdown-path:
     description: 'Path to the generated Markdown report'
-  
-  total-prs:
-    description: 'Total number of PRs analyzed'
-  
-  total-comments:
-    description: 'Total number of AI reviewer comments'
-  
-  average-comments-per-pr:
-    description: 'Average comments per PR'
 
 runs:
   using: 'node20'
